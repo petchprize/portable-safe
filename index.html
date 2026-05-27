@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Secure Text Vault - ตู้เซฟข้อความพกพา</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 650px;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+        h2 {
+            color: #1a365d;
+            text-align: center;
+            margin-top: 0;
+            font-size: 24px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 15px;
+        }
+        .description {
+            font-size: 14px;
+            color: #4a5568;
+            text-align: center;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        .section {
+            background-color: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-weight: bold;
+            color: #2b6cb0;
+            margin-bottom: 12px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        input[type="password"], textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+        textarea {
+            resize: vertical;
+            height: 120px;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-encrypt {
+            background-color: #3182ce;
+            color: white;
+        }
+        .btn-encrypt:hover {
+            background-color: #2b6cb0;
+        }
+        .btn-decrypt {
+            background-color: #38a169;
+            color: white;
+        }
+        .btn-decrypt:hover {
+            background-color: #2f855a;
+        }
+        .status-message {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+            text-align: center;
+        }
+        .success {
+            background-color: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+        .error {
+            background-color: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #feb2b2;
+        }
+        .footer {
+            text-align: center;
+            font-size: 11px;
+            color: #a0aec0;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🔒 ตู้เซฟข้อความพกพา (Secure Text Vault)</h2>
+    <p class="description">
+        ไฟล์นี้ทำงานแบบออฟไลน์ 100% บนเครื่องของคุณ (ปลอดภัย ไม่ส่งข้อมูลไปที่ไหน)<br>
+        ใช้สำหรับเข้ารหัสข้อความ/รหัสผ่านเป็นไฟล์ล็อก หรือถอดรหัสเพื่อเปิดดู เพื่อแนบเข้า Email ได้อย่างปลอดภัย
+    </p>
+
+    <!-- SECTION 1: ENCRYPT -->
+    <div class="section">
+        <div class="section-title">➕ 1. บันทึกและเข้ารหัสข้อมูลใหม่</div>
+        <label for="plainText">ข้อความหรือรหัสผ่านที่ต้องการซ่อน:</label>
+        <textarea id="plainText" placeholder="พิมพ์หรือวางรหัสผ่าน/ข้อความสำคัญที่นี่..."></textarea>
+        
+        <label for="encryptKey">ตั้งรหัสผ่านสำหรับเปิดตู้เซฟ (Master Password):</label>
+        <input type="password" id="encryptKey" placeholder="ตั้งรหัสผ่านเพื่อล็อกไฟล์นี้">
+        
+        <button class="btn-encrypt" onclick="encryptAndDownload()">เข้ารหัสและดาวน์โหลดไฟล์เซฟ (.txt)</button>
+        <div id="encryptStatus" class="status-message"></div>
+    </div>
+
+    <!-- SECTION 2: DECRYPT -->
+    <div class="section">
+        <div class="section-title">🔓 2. ถอดรหัสเพื่อเปิดดูข้อมูล</div>
+        <label for="fileInput">เลือกไฟล์เซฟ (.txt) ที่เคยดาวน์โหลดไว้:</label>
+        <input type="file" id="fileInput" accept=".txt" style="margin-bottom: 15px;">
+        
+        <label for="decryptKey">ใส่รหัสผ่านปลดล็อก (Master Password):</label>
+        <input type="password" id="decryptKey" placeholder="กรอกรหัสผ่านเพื่อปลดล็อก">
+        
+        <button class="btn-decrypt" onclick="decryptFile()">ถอดรหัสเปิดดูข้อความ</button>
+        <div id="decryptStatus" class="status-message"></div>
+        
+        <div id="decryptedResultSection" style="display:none; margin-top:15px;">
+            <label style="color:#2f855a;">✓ ข้อความที่ปลดล็อกสำเร็จ (Copy ไปใช้ได้เลย):</label>
+            <textarea id="decryptedText" readonly style="background-color:#f0fff4; border-color:#9ae6b4; font-family:monospace;"></textarea>
+        </div>
+    </div>
+
+    <div class="footer">
+        เข้ารหัสด้วยอัลกอริทึม Web Crypto API (AES-GCM 256-bit) มาตรฐานความปลอดภัยสูง | พัฒนาขึ้นเพื่อใช้งานแบบพกพา
+    </div>
+</div>
+
+<script>
+    // Helper function to convert string to array buffer
+    function textToBuffer(text) {
+        return new TextEncoder().encode(text);
+    }
+
+    // Helper function to convert array buffer to string
+    function bufferToText(buffer) {
+        return new TextDecoder().decode(buffer);
+    }
+
+    // Derive a cryptographic key from a password string using PBKDF2
+    async function deriveKey(password, salt) {
+        const baseKey = await window.crypto.subtle.importKey(
+            "raw",
+            textToBuffer(password),
+            { name: "PBKDF2" },
+            false,
+            ["deriveKey"]
+        );
+        return window.crypto.subtle.deriveKey(
+            {
+                name: "PBKDF2",
+                salt: salt,
+                iterations: 100000,
+                hash: "SHA-256"
+            },
+            baseKey,
+            { name: "AES-GCM", length: 256 },
+            false,
+            ["encrypt", "decrypt"]
+        );
+    }
+
+    // Core function to Encrypt text and trigger file download
+    async function encryptAndDownload() {
+        const text = document.getElementById('plainText').value;
+        const password = document.getElementById('encryptKey').value;
+        const statusDiv = document.getElementById('encryptStatus');
+
+        if (!text || !password) {
+            showStatus(statusDiv, 'กรุณากรอกทั้งข้อความและรหัสผ่านสำหรับล็อกไฟล์!', 'error');
+            return;
+        }
+
+        try {
+            // Generate a random 16-byte salt and 12-byte IV
+            const salt = window.crypto.getRandomValues(new Uint8Array(16));
+            const iv = window.crypto.getRandomValues(new Uint8Array(12));
+
+            // Derive key using the password and salt
+            const key = await deriveKey(password, salt);
+
+            // Encrypt the plain text
+            const encryptedBuffer = await window.crypto.subtle.encrypt(
+                { name: "AES-GCM", iv: iv },
+                key,
+                textToBuffer(text)
+            );
+
+            // Combine Salt + IV + Encrypted Data into one single file payload
+            const combinedBuffer = new Uint8Array(salt.length + iv.length + encryptedBuffer.byteLength);
+            combinedBuffer.set(salt, 0);
+            combinedBuffer.set(iv, salt.length);
+            combinedBuffer.set(new Uint8Array(encryptedBuffer), salt.length + iv.length);
+
+            // Convert binary to base64 string so it can be safely stored in a text file
+            const base64String = btoa(String.fromCharCode.apply(null, combinedBuffer));
+            
+            // Create a file download
+            const blob = new Blob(["VAULT_DATA:" + base64String], { type: "text/plain;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "my_secure_vault.txt";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showStatus(statusDiv, 'เข้ารหัสเสร็จสิ้น! ไฟล์ "my_secure_vault.txt" ถูกดาวน์โหลดแล้ว สามารถนำไฟล์นี้ไปแนบอีเมลได้เลย', 'success');
+            document.getElementById('plainText').value = '';
+            document.getElementById('encryptKey').value = '';
+        } catch (err) {
+            console.error(err);
+            showStatus(statusDiv, 'เกิดข้อผิดพลาดในการเข้ารหัส: ' + err.message, 'error');
+        }
+    }
+
+    // Core function to Decrypt uploaded file
+    async function decryptFile() {
+        const fileInput = document.getElementById('fileInput');
+        const password = document.getElementById('decryptKey').value;
+        const statusDiv = document.getElementById('decryptStatus');
+        const resultSection = document.getElementById('decryptedResultSection');
+        const resultTextArea = document.getElementById('decryptedText');
+
+        resultSection.style.display = 'none';
+
+        if (fileInput.files.length === 0) {
+            showStatus(statusDiv, 'กรุณาเลือกไฟล์ .txt ที่คุณต้องการปลดล็อกก่อน!', 'error');
+            return;
+        }
+        if (!password) {
+            showStatus(statusDiv, 'กรุณากรอกรหัสผ่านปลดล็อก!', 'error');
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        reader.onload = async function(e) {
+            const content = e.target.result.trim();
+            if (!content.startsWith("VAULT_DATA:")) {
+                showStatus(statusDiv, 'ไฟล์นี้ไม่ใช่ไฟล์ตู้เซฟที่ถูกต้อง หรือข้อมูลในไฟล์เสียหาย!', 'error');
+                return;
+            }
+
+            try {
+                const base64Data = content.replace("VAULT_DATA:", "");
+                // Decode base64 to binary string
+                const binarySign = atob(base64Data);
+                const combinedBuffer = new Uint8Array(binarySign.length);
+                for (let i = 0; i < binarySign.length; i++) {
+                    combinedBuffer[i] = binarySign.charCodeAt(i);
+                }
+
+                // Extract Salt (first 16 bytes), IV (next 12 bytes), and Ciphertext (the rest)
+                const salt = combinedBuffer.slice(0, 16);
+                const iv = combinedBuffer.slice(16, 28);
+                const ciphertext = combinedBuffer.slice(28);
+
+                // Derive key using the provided password and the extracted salt
+                const key = await deriveKey(password, salt);
+
+                // Decrypt
+                const decryptedBuffer = await window.crypto.subtle.decrypt(
+                    { name: "AES-GCM", iv: iv },
+                    key,
+                    ciphertext
+                );
+
+                const plainText = bufferToText(decryptedBuffer);
+                
+                resultTextArea.value = plainText;
+                resultSection.style.display = 'block';
+                showStatus(statusDiv, 'ปลดล็อกรหัสผ่านสำเร็จแล้ว!', 'success');
+                document.getElementById('decryptKey').value = '';
+            } catch (err) {
+                console.error(err);
+                showStatus(statusDiv, 'รหัสผ่านไม่ถูกต้อง หรือไฟล์เสียหาย! ปลดล็อกล้มเหลว', 'error');
+            }
+        };
+
+        reader.readAsText(file);
+    }
+
+    function showStatus(element, message, type) {
+        element.innerText = message;
+        element.className = 'status-message ' + type;
+        element.style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
